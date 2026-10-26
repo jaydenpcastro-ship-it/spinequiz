@@ -40,7 +40,7 @@ and the ligament fibres come from the model's ligament attachment files.
   player on the host screen only.
 - Live leaderboard, final podium, automatic winner.
 
-Live site: <https://spinequiz.vercel.app>
+Live site: <https://lumbarquiz.vercel.app> (also https://spinequiz-green.vercel.app; Vercel project `spinequiz` in the Muscle Quiz team)
 
 ## Files
 
