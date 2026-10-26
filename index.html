@@ -1,0 +1,1526 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Lumbar Spine Live</title>
+<meta name="description" content="Lumbar Spine Live: a live, Kahoot-style multiplayer quiz. 10 questions on the lumbosacral spine and pelvis (identify the highlighted structure, name the muscle that originates there, call the motion), illustrated with renders and looping animations of the ArtiSynth lumbosacral spine model.">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ctext y='.9em' font-size='90'%3E%F0%9F%A6%B4%3C/text%3E%3C/svg%3E">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Fredoka:wght@500;600;700&family=Inter:wght@400;500;600;700;800&display=swap">
+<style>
+  :root{
+    --bg:#12141c;
+    --surface:#1c2030;
+    --surface-2:#252b40;
+    --border:#333a54;
+    --text:#f3f5fb;
+    --text-dim:#9aa3c0;
+    --accent:#8c6dfb;
+    --accent-text:#ffffff;
+    --good:#2ec4b6;
+    --bad:#ef476f;
+    --red:#e63946;
+    --blue:#3a86ff;
+    --gold:#ffb703;
+    --green:#2ec4b6;
+    --shadow:0 10px 30px rgba(0,0,0,.35);
+    color-scheme:dark;
+  }
+  @media (prefers-color-scheme: light){
+    :root:not([data-theme="dark"]){
+      --bg:#f7f5ff; --surface:#ffffff; --surface-2:#f0ecff; --border:#e1dbf7;
+      --text:#211c3d; --text-dim:#665f8c; --accent:#6d3df5; --accent-text:#ffffff;
+      --good:#0f9c8f; --bad:#d63459; --red:#e0313f; --blue:#2a6fe0; --gold:#e0a000; --green:#0f9c8f;
+      --shadow:0 10px 30px rgba(80,60,150,.12); color-scheme:light;
+    }
+  }
+  :root[data-theme="light"]{
+    --bg:#f7f5ff; --surface:#ffffff; --surface-2:#f0ecff; --border:#e1dbf7;
+    --text:#211c3d; --text-dim:#665f8c; --accent:#6d3df5; --accent-text:#ffffff;
+    --good:#0f9c8f; --bad:#d63459; --red:#e0313f; --blue:#2a6fe0; --gold:#e0a000; --green:#0f9c8f;
+    --shadow:0 10px 30px rgba(80,60,150,.12); color-scheme:light;
+  }
+
+  *{box-sizing:border-box;}
+  html,body{height:100%;}
+  body{
+    margin:0; background:var(--bg); color:var(--text);
+    font-family:'Inter',system-ui,-apple-system,sans-serif; font-size:14px;
+    padding-left:max(16px, env(safe-area-inset-left,0px));
+    padding-right:max(16px, env(safe-area-inset-right,0px));
+    display:flex; justify-content:center;
+  }
+  h1,h2,h3,.display{font-family:'Fredoka',system-ui,sans-serif; text-wrap:balance;}
+  img{max-width:100%;}
+
+  #app{
+    width:100%; max-width:620px;
+    padding-block:calc(20px + env(safe-area-inset-top,0px)) 110px;
+    min-height:100%; display:flex; flex-direction:column; gap:16px;
+  }
+
+  .topbar{display:flex; align-items:center; justify-content:space-between; gap:10px;}
+  .brand{display:flex; align-items:center; gap:10px;}
+  .brand-mark{
+    width:34px;height:34px;border-radius:10px;
+    background:linear-gradient(135deg,var(--accent),var(--blue));
+    display:flex;align-items:center;justify-content:center;font-size:18px;flex:none;
+  }
+  .brand-name{font-family:'Fredoka';font-weight:600;font-size:16px;}
+  .phase-pill{
+    font-size:11px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;
+    color:var(--accent);background:color-mix(in srgb, var(--accent) 14%, transparent);
+    padding:5px 10px;border-radius:999px;white-space:nowrap;
+  }
+
+  .card{background:var(--surface);border:1px solid var(--border);border-radius:18px;padding:22px;box-shadow:var(--shadow);}
+  .lede{color:var(--text-dim);font-size:14px;line-height:1.5;margin:4px 0 0;}
+  .muted{color:var(--text-dim);font-weight:500;}
+
+  input[type=text]{
+    width:100%;font:inherit;font-size:16px;padding:13px 14px;border-radius:12px;
+    border:1.5px solid var(--border);background:var(--surface-2);color:var(--text);outline:none;
+  }
+  input[type=text]:focus{border-color:var(--accent);}
+  input#codeInput{text-transform:uppercase;letter-spacing:.25em;font-weight:800;font-size:22px;text-align:center;font-family:'Fredoka';}
+
+  button{font:inherit;cursor:pointer;border:none;}
+  .btn{
+    display:inline-flex;align-items:center;justify-content:center;gap:8px;
+    font-weight:700;font-size:15px;padding:13px 18px;border-radius:12px;
+    background:var(--accent);color:var(--accent-text);width:100%;
+    transition:transform .08s ease, opacity .15s ease;
+  }
+  .btn:active{transform:scale(.98);}
+  .btn:disabled{opacity:.45;cursor:not-allowed;}
+  .btn.secondary{background:var(--surface-2);color:var(--text);border:1.5px solid var(--border);}
+  .btn.pulse{animation:pulse 1s ease-in-out infinite;}
+  @keyframes pulse{0%,100%{box-shadow:0 0 0 0 color-mix(in srgb, var(--accent) 55%, transparent);}50%{box-shadow:0 0 0 10px transparent;}}
+  :focus-visible{outline:2px solid var(--accent);outline-offset:2px;}
+
+  .roomcode{
+    font-family:'Fredoka';font-weight:700;font-size:clamp(44px,14vw,72px);
+    letter-spacing:.14em;line-height:1;text-align:center;margin:6px 0 2px;
+    color:var(--text);
+  }
+  .joinurl{
+    text-align:center;font-size:13px;color:var(--text-dim);word-break:break-all;
+    background:var(--surface-2);padding:10px 12px;border-radius:10px;margin-top:12px;
+  }
+  #qrbox{display:flex;justify-content:center;margin-top:16px;}
+  #qrbox img,#qrbox canvas{background:#fff;padding:10px;border-radius:12px;}
+
+  .player-row{
+    display:flex;align-items:center;justify-content:space-between;
+    padding:11px 14px;background:var(--surface-2);border-radius:12px;font-weight:600;font-size:14px;
+  }
+  .player-row + .player-row{margin-top:8px;}
+  .avatar-dot{width:9px;height:9px;border-radius:50%;background:var(--good);flex:none;margin-right:9px;}
+  .player-name{display:flex;align-items:center;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+  .kickbtn{
+    background:transparent;border:1.5px solid var(--border);color:var(--bad);
+    font-size:11px;font-weight:700;padding:5px 10px;border-radius:8px;flex:none;
+  }
+  .kickbtn:hover{border-color:var(--bad);}
+  .chiprow{display:flex;flex-wrap:wrap;gap:8px;}
+  .chip{
+    padding:10px 14px;border-radius:999px;background:var(--surface-2);
+    border:1.5px solid var(--border);font-weight:700;font-size:14px;color:var(--text);
+  }
+  .chip:hover{border-color:var(--accent);}
+
+  .qbox{text-align:center;}
+  .qcount{color:var(--text-dim);font-size:13px;font-weight:600;letter-spacing:.03em;}
+  .qtext{font-family:'Fredoka';font-size:clamp(18px,4.5vw,26px);font-weight:600;line-height:1.3;margin:8px 0 18px;}
+
+  .qfig{margin:0 auto 16px;display:flex;flex-direction:column;align-items:center;gap:6px;}
+  .qfig img{display:block;width:auto;max-width:100%;max-height:min(34vh,340px);object-fit:contain;
+    background:#161b2b;border-radius:16px;box-shadow:var(--shadow);}
+  .qfig.small img{max-height:min(28vh,250px);border-radius:12px;}
+  .credit{color:var(--text-dim);font-size:11.5px;line-height:1.45;margin:16px 0 0;opacity:.85;}
+  .qfig figcaption{font-size:13px;font-weight:600;color:var(--text-dim);text-align:center;}
+  .timerwrap{display:flex;align-items:center;gap:10px;margin-bottom:16px;}
+  .timertrack{flex:1;height:10px;border-radius:999px;background:var(--surface-2);overflow:hidden;}
+  .timerbar{height:100%;background:linear-gradient(90deg,var(--good),var(--gold),var(--bad));width:100%;transform-origin:left;transition:transform .18s linear;}
+  .timernum{font-variant-numeric:tabular-nums;font-weight:800;font-size:15px;min-width:2.4em;text-align:right;}
+
+  .answers{display:grid;grid-template-columns:1fr 1fr;gap:12px;}
+  @media (max-width:480px){.answers{grid-template-columns:1fr;}}
+  .ans{
+    display:flex;align-items:center;gap:10px;padding:16px 14px;border-radius:14px;
+    color:#fff;font-weight:700;font-size:15px;text-align:left;line-height:1.25;
+    min-height:64px;box-shadow:0 4px 0 rgba(0,0,0,.18);width:100%;
+  }
+  .ans:active{transform:translateY(2px);box-shadow:0 2px 0 rgba(0,0,0,.18);}
+  .ans:disabled{opacity:.5;}
+  .ans .shape{width:20px;height:20px;flex:none;}
+  .ans.a{background:var(--red);}
+  .ans.b{background:var(--blue);}
+  .ans.c{background:var(--gold);color:#3a2900;}
+  .ans.d{background:var(--green);}
+  .ans.correct{outline:3px solid #fff;box-shadow:0 0 0 4px color-mix(in srgb, var(--good) 60%, transparent);}
+  .ans.wrong{opacity:.35;}
+  .ans .tally{margin-left:auto;font-size:13px;font-weight:800;opacity:.95;white-space:nowrap;}
+  .ans.picked::after{content:"✓ your pick";margin-left:auto;font-size:11px;font-weight:700;opacity:.9;}
+
+  .waiting{text-align:center;color:var(--text-dim);font-weight:600;padding:24px 0;}
+  .spinner{
+    width:34px;height:34px;border-radius:50%;border:3px solid var(--border);border-top-color:var(--accent);
+    margin:0 auto 12px;animation:spin .8s linear infinite;
+  }
+  @keyframes spin{to{transform:rotate(360deg);}}
+  @media (prefers-reduced-motion: reduce){*{animation:none!important;transition:none!important;}}
+
+  .revealline{display:flex;align-items:center;justify-content:space-around;margin-bottom:14px;gap:10px;}
+  .stat{text-align:center;}
+  .stat b{display:block;font-family:'Fredoka';font-size:26px;}
+  .stat span{font-size:11px;color:var(--text-dim);text-transform:uppercase;letter-spacing:.05em;}
+
+  .podium{display:flex;align-items:flex-end;gap:10px;justify-content:center;margin:6px 0 22px;}
+  .podium .pod{flex:1;max-width:150px;background:var(--surface-2);border:1px solid var(--border);border-radius:14px 14px 0 0;text-align:center;padding:10px 8px 14px;}
+  .podium .pod.gold{height:160px;order:2;border-top:3px solid var(--gold);}
+  .podium .pod.silver{height:128px;order:1;border-top:3px solid #b9c0d4;}
+  .podium .pod.bronze{height:104px;order:3;border-top:3px solid #cd8a5a;}
+  .podium .medal{font-size:26px;}
+  .podium .pname{font-weight:700;font-size:13px;margin-top:4px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+  .podium .pscore{font-family:'Fredoka';font-size:18px;margin-top:2px;}
+
+  .leaderrow{display:flex;align-items:center;gap:10px;padding:10px 12px;border-radius:10px;}
+  .leaderrow:nth-child(odd){background:var(--surface-2);}
+  .leaderrow .rank{width:26px;font-weight:800;color:var(--text-dim);font-size:13px;}
+  .leaderrow .lname{flex:1;font-weight:600;font-size:14px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+  .leaderrow .lscore{font-weight:800;font-variant-numeric:tabular-nums;}
+  .leaderrow.me{outline:1.5px solid var(--accent);}
+
+  .streaktag{font-size:12px;font-weight:800;color:var(--gold);white-space:nowrap;}
+  .hotnote{margin:-4px 0 10px;font-size:13px;font-weight:700;color:var(--gold);}
+
+  .jumpscare{
+    position:fixed;inset:0;z-index:9999;display:flex;align-items:center;justify-content:center;
+    background:rgba(0,0,0,.88);cursor:pointer;animation:jsflash .18s steps(2) 3;
+  }
+  .jumpscare .js-inner{
+    display:flex;flex-direction:column;align-items:center;gap:6px;text-align:center;
+    animation:jsshake .38s ease-in-out 3;
+  }
+  .jumpscare .js-face{font-size:clamp(110px,42vw,220px);line-height:1;filter:drop-shadow(0 0 22px var(--bad));}
+  .jumpscare .js-text{font-family:'Fredoka';font-weight:700;font-size:clamp(22px,7vw,34px);color:#fff;letter-spacing:.04em;}
+  @keyframes jsflash{0%{background:rgba(255,255,255,.92);}100%{background:rgba(0,0,0,.88);}}
+  @keyframes jsshake{0%,100%{transform:translate(0,0) scale(1);}20%{transform:translate(-10px,6px) scale(1.04);}40%{transform:translate(9px,-7px) scale(.97);}60%{transform:translate(-8px,-5px) scale(1.03);}80%{transform:translate(7px,7px) scale(.98);}}
+
+  .lockin{
+    position:fixed;left:50%;top:max(16px, calc(env(safe-area-inset-top,0px) + 10px));
+    transform:translateX(-50%);z-index:9998;pointer-events:none;
+    background:var(--bad);color:#fff;font-family:'Fredoka';font-weight:800;
+    font-size:16px;letter-spacing:.05em;text-transform:uppercase;
+    padding:12px 22px;border-radius:999px;box-shadow:var(--shadow);
+    animation:lockinIn .3s ease-out;
+  }
+  @keyframes lockinIn{0%{transform:translateX(-50%) translateY(-30px);opacity:0;}100%{transform:translateX(-50%) translateY(0);opacity:1;}}
+
+  /* host lobby music: official YouTube player, kept visible (YouTube embeds must be at least 200x200) */
+  .music{
+    position:fixed;left:16px;bottom:16px;z-index:60;width:224px;
+    background:var(--surface);border:1px solid var(--border);border-radius:16px;padding:10px 12px 12px;box-shadow:var(--shadow);
+  }
+  .music .mhead{display:flex;align-items:center;justify-content:space-between;gap:8px;margin-bottom:8px;}
+  .music .mlabel{font-size:12px;font-weight:700;line-height:1.25;color:var(--text);}
+  .music .mlabel small{display:block;font-weight:600;color:var(--text-dim);font-size:11px;}
+  .music .mtoggle{border:1px solid var(--border);background:var(--surface-2);color:var(--text);border-radius:999px;
+    font:700 11px/1 'Inter',sans-serif;padding:7px 10px;cursor:pointer;white-space:nowrap;}
+  .music .mplayer{width:200px;height:200px;border-radius:10px;overflow:hidden;background:#000;}
+  .music .mplayer iframe{display:block;width:200px;height:200px;border:0;}
+  .music .mnote{margin-top:6px;font-size:11px;color:var(--text-dim);line-height:1.3;}
+  .music.off{width:auto;}
+  .music.off .mplayer,.music.off .mnote{display:none;}
+  .music.off .mhead{margin-bottom:0;}
+  @media (min-width:700px) and (max-width:1099px){
+    body.has-music{padding-left:256px;}
+    body.has-music .hostbar{left:240px;}
+  }
+  @media (max-width:699px){
+    .music{left:50%;bottom:auto;top:8px;transform:translateX(-50%);}
+    body.has-music{padding-top:280px;}
+    body.has-music.music-off{padding-top:60px;}
+  }
+
+  .hostbar{
+    position:fixed;left:0;right:0;bottom:0;display:flex;justify-content:center;
+    padding:12px max(16px, env(safe-area-inset-left,0px)) calc(12px + env(safe-area-inset-bottom,0px)) max(16px, env(safe-area-inset-right,0px));
+    background:linear-gradient(0deg, var(--bg) 62%, transparent);
+  }
+  .hostbar-inner{
+    width:100%;max-width:620px;display:flex;flex-direction:column;gap:8px;
+    background:var(--surface);border:1px solid var(--border);border-radius:16px;padding:10px;box-shadow:var(--shadow);
+  }
+  .hostbar .btn{padding:11px 14px;font-size:14px;}
+  .hosttag{font-size:10px;font-weight:800;letter-spacing:.08em;color:var(--accent);text-transform:uppercase;text-align:center;}
+
+  .hubtabs{display:flex;gap:6px;padding:4px;background:var(--surface-2);border-radius:12px;margin-bottom:16px;}
+  .hubtab{flex:1;padding:9px 10px;border-radius:9px;font-weight:700;font-size:13px;color:var(--text-dim);background:transparent;}
+  .hubtab.active{background:var(--surface);color:var(--text);box-shadow:0 2px 6px rgba(0,0,0,.12);}
+
+  .setup-steps{margin:14px 0 0;padding-left:20px;line-height:1.7;color:var(--text-dim);font-size:14px;}
+  .setup-steps code{background:var(--surface-2);padding:2px 6px;border-radius:5px;color:var(--text);font-size:13px;}
+  .rowbtns{display:flex;gap:10px;flex-wrap:wrap;}
+  .rowbtns .btn{flex:1;min-width:140px;width:auto;}
+  .subtitle{margin:0 0 10px;font-family:'Fredoka';font-weight:500;font-size:16px;color:var(--accent);}
+
+  /* ---- pause ---- */
+  .btn.pausebtn{background:var(--gold);color:#3a2900;}
+  .btn.resumebtn{background:var(--good);color:#04201d;animation:pulseGood 1.1s ease-in-out infinite;}
+  @keyframes pulseGood{0%,100%{box-shadow:0 0 0 0 color-mix(in srgb, var(--good) 60%, transparent);}50%{box-shadow:0 0 0 10px transparent;}}
+  .kbd{
+    font-size:11px;font-weight:800;padding:2px 6px;border-radius:6px;
+    background:rgba(0,0,0,.16);letter-spacing:.03em;
+  }
+  @media (max-width:480px){.kbd{display:none;}}
+  .pausedbanner{
+    display:flex;align-items:center;gap:12px;
+    background:color-mix(in srgb, var(--gold) 16%, var(--surface));
+    border:1.5px solid var(--gold);border-radius:14px;padding:12px 14px;
+  }
+  .pausedbanner .pb-ico{font-size:26px;line-height:1;flex:none;}
+  .pausedbanner b{font-family:'Fredoka';font-size:17px;display:block;}
+  .pausedbanner span{color:var(--text-dim);font-size:13px;line-height:1.4;}
+  .timerwrap.paused .timerbar{filter:grayscale(1);opacity:.55;}
+  .timerwrap.paused .timernum{color:var(--gold);}
+  .timerwrap.reading .timerbar{filter:grayscale(1);opacity:.45;}
+  .timerwrap.reading .timernum{min-width:4.2em;color:#6b6b80;}
+  .pauseoverlay{
+    position:fixed;inset:0;z-index:10000;display:flex;align-items:center;justify-content:center;
+    padding:24px;text-align:center;
+    background:color-mix(in srgb, var(--bg) 90%, transparent);
+    -webkit-backdrop-filter:blur(8px);backdrop-filter:blur(8px);
+    cursor:not-allowed;touch-action:none;
+  }
+  .pauseoverlay .po-inner{
+    max-width:360px;width:100%;background:var(--surface);border:1.5px solid var(--gold);border-radius:22px;
+    padding:30px 24px;box-shadow:var(--shadow);
+  }
+  .pauseoverlay .po-ico{font-size:64px;line-height:1;}
+  .pauseoverlay .po-title{font-family:'Fredoka';font-weight:700;font-size:clamp(28px,8vw,36px);margin:10px 0 6px;}
+  .pauseoverlay .po-sub{color:var(--text-dim);font-size:14px;line-height:1.5;margin:0;}
+  .pauseoverlay .po-left{
+    display:inline-block;margin-top:16px;padding:8px 16px;border-radius:999px;
+    background:var(--surface-2);font-weight:800;font-size:14px;font-variant-numeric:tabular-nums;
+  }
+</style>
+</head>
+<body>
+<div id="app"><div class="card"><div class="waiting"><div class="spinner"></div>Loading…</div></div></div>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="https://cdn.jsdelivr.net/gh/davidshimjs/qrcodejs@master/qrcode.min.js"></script><script src="config.js"></script>
+<script src="questions.js"></script>
+<script>
+(function(){
+  "use strict";
+
+  var QUESTIONS = window.MQ_QUESTIONS || [];
+  // render or looping GIF for a question (img/, from the ArtiSynth lumbosacral spine model); preloaded so it shows instantly
+  QUESTIONS.forEach(function(q){ if(q.img){ var im = new Image(); im.src = q.img; } });
+  function qFigure(q, small){
+    if(!q || !q.img) return "";
+    return '<figure class="qfig' + (small ? " small" : "") + '"><img src="' + esc(q.img) + '" alt="' + esc(q.alt || q.cap || "") + '">' +
+      (q.cap ? '<figcaption>' + esc(q.cap) + '</figcaption>' : '') + '</figure>';
+  }
+  var DEFAULT_SETTINGS = { timeLimitSec: 20, shuffle: false };
+  var TIME_OPTIONS = [10, 15, 20, 30, 45, 60];
+  var ANS_META = [
+    {key:"a", shape:"triangle"},
+    {key:"b", shape:"diamond"},
+    {key:"c", shape:"circle"},
+    {key:"d", shape:"square"}
+  ];
+  var CODE_ALPHABET = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789"; // no I/O/0/1
+
+  var el = document.getElementById("app");
+  var sb = null, sbError = null, serverOffset = 0;
+  var roomCode = null, isHost = false, myPid = null;
+  var roomChannel = null, roomLoaded = false, room = null;
+  var wasReading = false;
+  var lastScreen = null, tickHandle = null, hubTab = "invite", qrDrawn = null;
+  var autoRevealQi = null, jumpScareHandle = null, lockInHandle = null;
+  var lockInShownQi = null;
+  var hostBusy = false, pendingScare = null;
+
+  function now(){ return Date.now() + serverOffset; }
+
+  // <pause-math> pure timing helpers (no DOM, no globals). Unit-tested in node
+  // by extracting this block, so keep it self-contained.
+  // All timestamps are SERVER-clock milliseconds (room_now_ms / serverOffset).
+  //
+  // Timestamps that measure "time spent in this phase". On resume every one
+  // that exists is shifted forward by the paused duration. Today only
+  // questionStartedAt exists (the reveal screen has no countdown of its own);
+  // revealStartedAt is listed so a future reveal/auto-advance timer is covered.
+  var TIMER_KEYS = ["questionStartedAt", "revealStartedAt"];
+
+  // Reading window: each question is shown for READ_MS before its answer clock
+  // starts. The host writes questionStartedAt = now + READ_MS, so elapsedMs is
+  // negative while players read, and pause/resume shifts it like any other time.
+  var READ_MS = 5000;
+
+  // ms since the question started, excluding paused time. While paused the
+  // clock is pinned at pausedAt, so the value is frozen.
+  function elapsedMs(st, nowMs){
+    if(!st || !st.questionStartedAt) return 0;
+    var ref = (st.paused && st.pausedAt != null) ? st.pausedAt : nowMs;
+    return ref - st.questionStartedAt;
+  }
+  // ms left on the question clock (never negative).
+  function remainingMs(st, limitMs, nowMs){
+    if(!st || !st.questionStartedAt) return limitMs;
+    return Math.max(0, Math.min(limitMs, limitMs - elapsedMs(st, nowMs)));
+  }
+  // ms left in the reading window before answers open (0 once the clock runs).
+  function readLeftMs(st, nowMs){
+    if(!st || !st.questionStartedAt) return 0;
+    return Math.max(0, -elapsedMs(st, nowMs));
+  }
+  // State fields written when the host pauses.
+  function pausePatch(serverTs){ return { paused: true, pausedAt: serverTs }; }
+  // State fields written on resume: clear the pause and push the phase
+  // timestamps forward by exactly how long the pause lasted. Repeated
+  // pause/resume cycles simply keep shifting questionStartedAt, so the shifts
+  // accumulate.
+  function resumePatch(st, serverTs){
+    var dur = Math.max(0, serverTs - (st.pausedAt != null ? st.pausedAt : serverTs));
+    var patch = { paused: false, pausedAt: null };
+    TIMER_KEYS.forEach(function(k){ if(typeof st[k] === "number") patch[k] = st[k] + dur; });
+    return patch;
+  }
+  // </pause-math>
+  function esc(s){ var d=document.createElement("div"); d.textContent = s==null?"":String(s); return d.innerHTML; }
+  function lsGet(k){ try{ return localStorage.getItem(k); }catch(e){ return null; } }
+  function lsSet(k,v){ try{ localStorage.setItem(k,v); }catch(e){} }
+
+  function configured(){
+    var c = window.MQ_SUPABASE_CONFIG;
+    if(!c) return false;
+    if(!c.url || String(c.url).indexOf("PASTE_") === 0) return false;
+    if(!c.anonKey || String(c.anonKey).indexOf("PASTE_") === 0) return false;
+    return true;
+  }
+
+  function shapeSvg(shape){
+    if(shape==="triangle") return '<svg class="shape" viewBox="0 0 20 20" aria-hidden="true"><polygon points="10,2 18,17 2,17" fill="#fff"/></svg>';
+    if(shape==="diamond") return '<svg class="shape" viewBox="0 0 20 20" aria-hidden="true"><polygon points="10,1 19,10 10,19 1,10" fill="#fff"/></svg>';
+    if(shape==="circle") return '<svg class="shape" viewBox="0 0 20 20" aria-hidden="true"><circle cx="10" cy="10" r="8" fill="#3a2900"/></svg>';
+    return '<svg class="shape" viewBox="0 0 20 20" aria-hidden="true"><rect x="2" y="2" width="16" height="16" rx="3" fill="#fff"/></svg>';
+  }
+
+  // ---------- room data helpers ----------
+  function state(){ return (room && room.state) || null; }
+  function settings(){ return Object.assign({}, DEFAULT_SETTINGS, (room && room.settings) || {}); }
+  function playerList(){
+    var ps = (room && room.players) || {};
+    return Object.keys(ps).map(function(id){ return Object.assign({id:id}, ps[id]); });
+  }
+  function sortedPlayers(){
+    return playerList().sort(function(a,b){
+      return (b.totalScore||0)-(a.totalScore||0) || String(a.name||"").localeCompare(String(b.name||""));
+    });
+  }
+  function myPlayer(){
+    if(!myPid) return null;
+    var ps = (room && room.players) || {};
+    return ps[myPid] ? Object.assign({id:myPid}, ps[myPid]) : null;
+  }
+  function streakTag(p){
+    var n = (p && p.streak) || 0;
+    return n >= 2 ? ' <span class="streaktag">🔥' + n + '</span>' : '';
+  }
+  function timeLimitMs(){ return settings().timeLimitSec * 1000; }
+  function questionAt(qi){
+    var st = state();
+    var idx = (st && st.order && st.order[qi]!=null) ? st.order[qi] : qi;
+    return QUESTIONS[idx];
+  }
+  function joinUrl(){
+    return location.origin + location.pathname + "?room=" + roomCode;
+  }
+
+  // ---------- screen routing ----------
+  function computeScreen(){
+    if(!configured()) return "setup";
+    if(sbError) return "sberror";
+    if(!roomCode) return "home";
+    if(!roomLoaded) return "connecting";
+    if(!room) return "badroom";
+    var st = state() || {status:"lobby"};
+    if(isHost) return "host:" + st.status;
+    if(!myPlayer()) return "join";
+    return "play:" + st.status;
+  }
+
+  function render(){
+    var screen = computeScreen();
+    // preserve in-progress typing on screens that hold a text field
+    var preserve = {};
+    ["nameInput","codeInput","addPlayerInput"].forEach(function(id){
+      var node = document.getElementById(id);
+      if(node) preserve[id] = node.value;
+    });
+    var sameScreen = (screen === lastScreen);
+    lastScreen = screen;
+    el.innerHTML = topbar(screen) + body(screen) + hostbar(screen);
+    wire(screen);
+    if(sameScreen){
+      Object.keys(preserve).forEach(function(id){
+        var node = document.getElementById(id);
+        if(node && preserve[id]) node.value = preserve[id];
+      });
+    }
+    drawQr(screen);
+    syncPauseOverlay(screen);
+    maybeShowLockIn();
+    if(pendingScare != null && !(state() && state().paused)){ var c = pendingScare; pendingScare = null; jumpScare(c); }
+    syncMusic();
+  }
+
+  // ---------- host lobby music ----------
+  // "Back at It" by Dyalla (Epidemic Sound), played through YouTube's own embedded player from the
+  // official "Dyalla - Topic" upload. HOST screen only: plays in the lobby and during each question's
+  // response time (reading window + answer timer); pauses on the answer reveal, while the game is
+  // paused, and on the results screen. The host can switch it off (remembered in this browser).
+  var MUSIC = { videoId: "a6OolPlizRY", title: "Back at It", artist: "Dyalla", volume: 45 };
+  var musicPlayer = null, musicReady = false, musicApiRequested = false, musicError = null, musicBox = null, musicTry = 0;
+  function musicOn(){ return lsGet("lsl_music") !== "off"; }
+  function musicWanted(){
+    var st = state();
+    if(!st || !musicOn()) return false;
+    if(st.status === "lobby") return true;
+    return st.status === "question" && !st.paused;
+  }
+  function ensureMusicBox(){
+    if(musicBox) return musicBox;
+    musicBox = document.createElement("div");
+    musicBox.className = "music";
+    musicBox.setAttribute("aria-label", "Lobby music");
+    musicBox.innerHTML =
+      '<div class="mhead"><div class="mlabel">🎵 ' + esc(MUSIC.title) + '<small>' + esc(MUSIC.artist) + ' · lobby music</small></div>' +
+      '<button class="mtoggle" type="button"></button></div>' +
+      '<div class="mplayer"><div id="ytmusic"></div></div>' +
+      '<div class="mnote" id="musicNote">Plays in the lobby and while players answer.</div>';
+    musicBox.querySelector(".mtoggle").addEventListener("click", function(){
+      lsSet("lsl_music", musicOn() ? "off" : "on");
+      syncMusic();
+    });
+    document.body.appendChild(musicBox);
+    return musicBox;
+  }
+  function loadMusicApi(){
+    if(musicApiRequested) return;
+    musicApiRequested = true;
+    var prev = window.onYouTubeIframeAPIReady;
+    window.onYouTubeIframeAPIReady = function(){
+      if(typeof prev === "function") prev();
+      musicPlayer = new YT.Player("ytmusic", {
+        width: 200, height: 200, videoId: MUSIC.videoId,
+        playerVars: { loop: 1, playlist: MUSIC.videoId, controls: 1, rel: 0, playsinline: 1 },
+        events: {
+          onReady: function(e){ musicReady = true; e.target.setVolume(MUSIC.volume); syncMusic(); },
+          onStateChange: function(){ syncMusic(); },
+          onError: function(e){ musicError = e.data; syncMusic(); }
+        }
+      });
+    };
+    var tag = document.createElement("script");
+    tag.src = "https://www.youtube.com/iframe_api";
+    document.head.appendChild(tag);
+  }
+  function syncMusic(fromClick){
+    var hostInRoom = isHost && roomLoaded && room && lastScreen && lastScreen.indexOf("host:") === 0;
+    if(!hostInRoom){
+      if(musicReady && musicPlayer.getPlayerState() === 1) musicPlayer.pauseVideo();
+      if(musicBox) musicBox.style.display = "none";
+      document.body.classList.remove("has-music", "music-off");
+      return;
+    }
+    var box = ensureMusicBox();
+    box.style.display = "";
+    var on = musicOn();
+    box.classList.toggle("off", !on);
+    document.body.classList.add("has-music");
+    document.body.classList.toggle("music-off", !on);
+    box.querySelector(".mtoggle").textContent = on ? "Music off" : "🎵 Music on";
+    if(on) loadMusicApi();
+    var note = document.getElementById("musicNote");
+    if(!musicReady){ if(note && musicError != null) note.textContent = "The video can't play here (YouTube error " + musicError + ")."; return; }
+    var ps = musicPlayer.getPlayerState(); // 1 playing, 2 paused, 3 buffering, 5 cued, -1 unstarted, 0 ended
+    var want = musicWanted();
+    // throttle play attempts so a blocked autoplay can't loop; a host click always retries
+    if(want && ps !== 1 && ps !== 3 && (fromClick === true || Date.now() - musicTry > 1500)){ musicTry = Date.now(); musicPlayer.playVideo(); }
+    if(!want && (ps === 1 || ps === 3)) musicPlayer.pauseVideo();
+    if(note){
+      if(musicError != null) note.textContent = "The video can't play here (YouTube error " + musicError + ").";
+      else if(want && ps !== 1 && ps !== 3) note.textContent = "Click anywhere to start the music.";
+      else note.textContent = want ? (state().status === "lobby" ? "Playing in the lobby." : "Playing while players answer.") : "Paused until the next question.";
+    }
+  }
+  // Browsers only start sound after a click: retry on the host's next click (Start game, Next question...)
+  document.addEventListener("pointerdown", function(){ if(isHost) setTimeout(function(){ syncMusic(true); }, 0); }, true);
+
+  function topbar(screen){
+    var st = state();
+    var qi = (st && st.qIndex) || 0;
+    var label = "";
+    if(screen==="setup") label = "Setup";
+    else if(screen==="sberror") label = "Error";
+    else if(screen==="home") label = "Start";
+    else if(screen==="connecting") label = "Connecting";
+    else if(screen==="badroom") label = "Not found";
+    else if(screen==="join") label = "Join";
+    else if(/lobby$/.test(screen)) label = isHost ? "Hub" : "Lobby";
+    else if(/question$/.test(screen)) label = "Question " + (qi+1) + " / " + QUESTIONS.length;
+    else if(/reveal$/.test(screen)) label = "Answer";
+    else if(/ended$/.test(screen)) label = "Results";
+    if(label && st && st.paused && /(question|reveal)$/.test(screen)) label += " \u00b7 Paused";
+    return '<div class="topbar">' +
+      '<div class="brand"><div class="brand-mark">🦴</div><div class="brand-name">Lumbar Spine Live</div></div>' +
+      (label? '<div class="phase-pill">' + esc(label) + '</div>' : '') +
+    '</div>';
+  }
+
+  // ---------- bodies ----------
+  function body(screen){
+    if(screen==="setup") return setupBody();
+    if(screen==="sberror"){
+      return '<div class="card"><h2 style="margin:0 0 6px;">Couldn\'t reach the database</h2>' +
+        '<p class="lede">' + esc(sbError) + '</p>' +
+        '<p class="lede">Check the values in <code>config.js</code> and that the schema from <code>schema.sql</code> has been run in your Supabase project.</p></div>';
+    }
+    if(screen==="connecting") return '<div class="card"><div class="waiting"><div class="spinner"></div>Connecting…</div></div>';
+    if(screen==="home") return homeBody();
+    if(screen==="badroom"){
+      return '<div class="card"><h2 style="margin:0 0 6px;">That game code didn\'t match</h2>' +
+        '<p class="lede">Room <b>' + esc(roomCode) + '</b> isn\'t running. Double-check the code with your host.</p>' +
+        '<div style="margin-top:16px;"><button class="btn secondary" id="btnBackHome">Back to start</button></div></div>';
+    }
+    if(screen==="join") return joinBody();
+    if(screen.indexOf("host:")===0) return hostBody(screen.slice(5));
+    if(screen.indexOf("play:")===0) return playBody(screen.slice(5));
+    return "";
+  }
+
+  function setupBody(){
+    return '<div class="card">' +
+      '<h2 style="margin:0 0 6px;">One-time setup needed</h2>' +
+      '<p class="lede">This quiz needs a free Supabase project to sync everyone\'s answers. It takes about five minutes, once.</p>' +
+      '<ol class="setup-steps">' +
+        '<li>Open <b>supabase.com/dashboard</b> → <b>New project</b>.</li>' +
+        '<li><b>SQL Editor → New query</b> → paste the contents of <code>schema.sql</code> from this repo → <b>Run</b>.</li>' +
+        '<li><b>Project settings → API</b>.</li>' +
+        '<li>Copy the <b>Project URL</b> and <b>anon public</b> key into <code>config.js</code> in this repo, and save.</li>' +
+      '</ol>' +
+      '<p class="lede" style="margin-top:14px;">Once that file is saved, reload this page and the game is live.</p>' +
+    '</div>';
+  }
+
+  function homeBody(){
+    return '<div class="card">' +
+      '<h2 style="margin:0 0 2px;">Lumbar Spine Live</h2>' +
+      '<p class="subtitle">Spot the structure, name the muscle, call the motion</p>' +
+      '<p class="lede">A live ' + QUESTIONS.length + '-question quiz. Players answer on their own phones — no account, no sign-in.</p>' +
+      '<div class="rowbtns" style="margin-top:18px;">' +
+        '<button class="btn" id="btnHostNew">Host a new game</button>' +
+      '</div>' +
+      '<p class="credit">3D bones: ArtiSynth lumbosacral spine model (Remus et al., PLoS ONE 2021; BSD-3-Clause), from the Visible Human Project male.</p>' +
+    '</div>' +
+    '<div class="card">' +
+      '<h3 style="margin:0 0 10px;font-size:15px;">Joining a game?</h3>' +
+      '<form id="codeForm" style="display:flex;flex-direction:column;gap:12px;">' +
+        '<input type="text" id="codeInput" maxlength="4" placeholder="CODE" autocomplete="off" autocapitalize="characters" spellcheck="false" required>' +
+        '<button class="btn secondary" type="submit">Join game</button>' +
+      '</form>' +
+    '</div>';
+  }
+
+  function joinBody(){
+    var unclaimed = playerList().filter(function(p){ return p.manual && !p.claimed; })
+      .sort(function(a,b){ return String(a.name||"").localeCompare(String(b.name||"")); });
+    var claimBlock = unclaimed.length ?
+      '<div class="card">' +
+        '<h3 style="margin:0 0 4px;font-size:15px;">Is your name on the list?</h3>' +
+        '<p class="lede" style="margin:0 0 12px;">Your host added these names — tap yours instead of typing.</p>' +
+        '<div class="chiprow">' + unclaimed.map(function(p){
+          return '<button class="chip" data-claim="' + esc(p.id) + '" type="button">' + esc(p.name) + '</button>';
+        }).join("") + '</div>' +
+      '</div>' : '';
+    return pausedBanner("player") + '<div class="card">' +
+      '<h2 style="margin:0 0 4px;">Enter your name</h2>' +
+      '<p class="lede">You\'re joining game <b>' + esc(roomCode) + '</b>. Everyone answers on their own device.</p>' +
+      '<form id="joinForm" style="margin-top:16px;display:flex;flex-direction:column;gap:12px;">' +
+        '<input type="text" id="nameInput" maxlength="24" placeholder="Your name" autocomplete="off" required>' +
+        '<button class="btn" type="submit">Join game</button>' +
+      '</form>' +
+    '</div>' + claimBlock;
+  }
+
+  // ----- host -----
+  function hostBody(status){
+    if(status==="lobby") return hostLobby();
+    if(status==="question") return hostQuestion();
+    if(status==="reveal") return hostReveal();
+    if(status==="ended") return resultsBody();
+    return "";
+  }
+
+  function hostLobby(){
+    var list = sortedPlayers();
+    var s = settings();
+    var rows = list.length ? list.map(function(p){
+      return '<div class="player-row"><span class="player-name"><span class="avatar-dot" style="background:' +
+        (p.manual && !p.claimed ? "var(--text-dim)" : "var(--good)") + '"></span>' + esc(p.name) + '</span>' +
+        '<span style="display:flex;align-items:center;gap:8px;">' +
+        (p.manual && !p.claimed ? '<span class="muted">added by you</span>' : '') +
+        '<button type="button" class="kickbtn" data-kick="' + esc(p.id) + '" aria-label="Remove ' + esc(p.name) + '">Kick</button>' +
+        '</span></div>';
+    }).join("") : '<div class="waiting">Waiting for players to join…</div>';
+
+    var tabs = '<div class="hubtabs">' +
+      '<button class="hubtab' + (hubTab==="invite"?" active":"") + '" data-tab="invite" type="button">Invite</button>' +
+      '<button class="hubtab' + (hubTab==="settings"?" active":"") + '" data-tab="settings" type="button">Settings</button>' +
+      '<button class="hubtab' + (hubTab==="addplayers"?" active":"") + '" data-tab="addplayers" type="button">Add players</button>' +
+    '</div>';
+
+    var tabBody;
+    if(hubTab==="settings"){
+      var timeOpts = TIME_OPTIONS.map(function(t){
+        return '<option value="' + t + '"' + (t===s.timeLimitSec?" selected":"") + '>' + t + ' seconds</option>';
+      }).join("");
+      tabBody =
+        '<div style="display:flex;flex-direction:column;gap:14px;">' +
+          '<label style="display:flex;flex-direction:column;gap:6px;">' +
+            '<span class="muted" style="font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:.04em;">Time per question</span>' +
+            '<select id="settingTime" style="font:inherit;font-size:15px;padding:11px 12px;border-radius:12px;border:1.5px solid var(--border);background:var(--surface-2);color:var(--text);">' + timeOpts + '</select>' +
+          '</label>' +
+          '<label style="display:flex;align-items:center;gap:10px;cursor:pointer;">' +
+            '<input type="checkbox" id="settingShuffle"' + (s.shuffle?" checked":"") + ' style="width:18px;height:18px;">' +
+            '<span>Shuffle question order each game</span>' +
+          '</label>' +
+        '</div>';
+    } else if(hubTab==="addplayers"){
+      tabBody =
+        '<p class="lede" style="margin:0 0 14px;">Add someone who can\'t open the link. Their name appears in the list, and they can claim it from the join screen by tapping it.</p>' +
+        '<form id="addPlayerForm" style="display:flex;gap:10px;">' +
+          '<input type="text" id="addPlayerInput" maxlength="24" placeholder="Player name" autocomplete="off" style="flex:1;">' +
+          '<button class="btn" type="submit" style="width:auto;padding:13px 18px;">Add</button>' +
+        '</form>';
+    } else {
+      tabBody =
+        '<p class="lede" style="margin:0 0 6px;text-align:center;">Go to <b>' + esc(location.host + location.pathname) + '</b> and enter</p>' +
+        '<div class="roomcode">' + esc(roomCode) + '</div>' +
+        '<div class="joinurl">' + esc(joinUrl()) + '</div>' +
+        '<div id="qrbox"></div>';
+    }
+
+    return '<div class="card">' + tabs + tabBody + '</div>' +
+      '<div class="card"><h3 style="margin:0 0 12px;font-size:15px;">Players (' + list.length + ')</h3>' + rows + '</div>';
+  }
+
+  function hostQuestion(){
+    var st = state(); var qi = st.qIndex||0; var q = questionAt(qi);
+    var ps = playerList();
+    var answered = ps.filter(function(p){ return p.answers && p.answers[qi]; }).length;
+    var tiles = ANS_META.map(function(m, idx){
+      return '<div class="ans ' + m.key + '">' + shapeSvg(m.shape) + '<span>' + esc(q.options[idx]) + '</span></div>';
+    }).join("");
+    return pausedBanner("host") + '<div class="card qbox">' +
+        '<div class="qcount">Question ' + (qi+1) + ' of ' + QUESTIONS.length + ' &middot; ' + answered + '/' + ps.length + ' answered</div>' +
+        '<div class="qtext">' + esc(q.q) + '</div>' + qFigure(q, false) +
+        '<div class="timerwrap' + (st.paused ? " paused" : "") + '"><div class="timertrack"><div class="timerbar" id="timerbar"></div></div><div class="timernum" id="timernum">' + (readLeftMs(st, now()) > 0 ? "Read" : settings().timeLimitSec + "s") + '</div></div>' +
+      '</div>' +
+      '<div class="answers">' + tiles + '</div>';
+  }
+
+  function hostReveal(){
+    var st = state(); var qi = st.qIndex||0; var q = questionAt(qi);
+    var ps = playerList();
+    var counts = [0,0,0,0];
+    ps.forEach(function(p){
+      var a = p.answers && p.answers[qi];
+      if(a && typeof a.choice === "number" && counts[a.choice]!=null) counts[a.choice]++;
+    });
+    var correctCount = counts[q.correct];
+    var tiles = ANS_META.map(function(m, idx){
+      var cls = m.key + (idx===q.correct ? " correct" : " wrong");
+      return '<div class="ans ' + cls + '">' + shapeSvg(m.shape) + '<span>' + esc(q.options[idx]) + '</span>' +
+        '<span class="tally">' + counts[idx] + '</span></div>';
+    }).join("");
+    var top = sortedPlayers().slice(0,5);
+    return pausedBanner("host") + '<div class="card">' +
+        '<div class="revealline">' +
+          '<div class="stat"><b>' + correctCount + '/' + ps.length + '</b><span>got it right</span></div>' +
+          '<div class="stat"><b>' + (qi+1) + '/' + QUESTIONS.length + '</b><span>questions done</span></div>' +
+        '</div>' +
+        '<div class="qtext" style="font-size:18px;text-align:left;margin-bottom:12px;">' + esc(q.q) + '</div>' + qFigure(q, true) +
+      '</div>' +
+      '<div class="answers">' + tiles + '</div>' +
+      (top.length ? '<div class="card"><h3 style="margin:0 0 10px;font-size:14px;">Leaderboard</h3>' +
+        top.map(function(p,i){
+          return '<div class="leaderrow"><span class="rank">#'+(i+1)+'</span><span class="lname">'+esc(p.name)+streakTag(p)+'</span><span class="lscore">'+(p.totalScore||0)+'</span></div>';
+        }).join("") + '</div>' : '');
+  }
+
+  // ----- player -----
+  function playBody(status){
+    if(status==="lobby"){
+      var mp = myPlayer();
+      var s = settings();
+      return '<div class="card">' +
+        '<h2 style="margin:0 0 4px;">You\'re in, ' + esc(mp? mp.name : "") + '! 🎉</h2>' +
+        '<p class="lede">Hang tight — your host will start the game shortly. Keep this page open.</p>' +
+      '</div>' +
+      '<div class="card"><h3 style="margin:0 0 8px;font-size:15px;">Round settings</h3>' +
+        '<p class="lede" style="margin:0;">' + s.timeLimitSec + ' seconds per question &middot; ' + QUESTIONS.length + ' questions &middot; order ' + (s.shuffle?"shuffled":"in sequence") + '</p>' +
+      '</div>' +
+      '<div class="card"><h3 style="margin:0 0 12px;font-size:15px;">Players (' + playerList().length + ')</h3>' +
+        sortedPlayers().map(function(p){
+          return '<div class="player-row"><span class="player-name"><span class="avatar-dot"></span>' + esc(p.name) + '</span>' +
+            (p.id===myPid? '<span class="muted">you</span>':'') + '</div>';
+        }).join("") +
+      '</div>';
+    }
+    if(status==="question"){
+      var st = state(); var qi = st.qIndex||0; var q = questionAt(qi);
+      var mp2 = myPlayer();
+      var already = mp2 && mp2.answers && mp2.answers[qi];
+      var isPaused = !!st.paused;
+      var reading = readLeftMs(st, now()) > 0;
+      var tiles = ANS_META.map(function(m, idx){
+        var picked = already && already.choice===idx;
+        return '<button class="ans ' + m.key + (picked?" picked":"") + '" data-idx="' + idx + '"' + ((already||isPaused||reading)?" disabled":"") + '>' +
+          shapeSvg(m.shape) + '<span>' + esc(q.options[idx]) + '</span></button>';
+      }).join("");
+      return '<div class="card qbox">' +
+          '<div class="qcount">Question ' + (qi+1) + ' of ' + QUESTIONS.length + '</div>' +
+          '<div class="qtext">' + esc(q.q) + '</div>' + qFigure(q, true) +
+          '<div class="timerwrap' + (isPaused ? " paused" : "") + '"><div class="timertrack"><div class="timerbar" id="timerbar"></div></div><div class="timernum" id="timernum">' + (readLeftMs(st, now()) > 0 ? "Read" : settings().timeLimitSec + "s") + '</div></div>' +
+        '</div>' +
+        '<div class="answers">' + tiles + '</div>' +
+        (already? '<div class="waiting" style="padding-top:14px;">Answer locked in — waiting for the others…</div>' : '');
+    }
+    if(status==="reveal"){
+      var st3 = state(); var qi3 = st3.qIndex||0; var q3 = questionAt(qi3);
+      var mp3 = myPlayer();
+      var mine = mp3 && mp3.answers && mp3.answers[qi3];
+      var ranked = sortedPlayers();
+      var myRank = ranked.findIndex(function(p){ return p.id===myPid; }) + 1;
+      var tiles3 = ANS_META.map(function(m, idx){
+        var cls = m.key + (idx===q3.correct ? " correct" : " wrong");
+        var picked = mine && mine.choice===idx;
+        return '<div class="ans ' + cls + (picked?" picked":"") + '">' + shapeSvg(m.shape) + '<span>' + esc(q3.options[idx]) + '</span></div>';
+      }).join("");
+      var headline = !mine ? "Time's up — no answer locked in" : (mine.correct ? "Correct! 🎉" : "Not this time");
+      var hotNote = (mine && mine.hotStreak) ? '<p class="hotnote">🔥 Hot streak bonus — 1.2x points!</p>' : '';
+      return '<div class="card">' +
+          '<h2 style="margin:0 0 10px;font-size:20px;">' + headline + '</h2>' + hotNote +
+          '<div class="revealline">' +
+            '<div class="stat"><b style="color:' + (mine && mine.correct? "var(--good)":"var(--bad)") + '">' + (mine && mine.correct? "+"+mine.points : "0") + '</b><span>points</span></div>' +
+            '<div class="stat"><b>' + (mp3? (mp3.totalScore||0) : 0) + '</b><span>total</span></div>' +
+            '<div class="stat"><b>' + (myRank||"–") + '</b><span>rank</span></div>' +
+          '</div>' +
+        '</div>' +
+        '<div class="answers">' + tiles3 + '</div>';
+    }
+    if(status==="ended") return resultsBody();
+    return "";
+  }
+
+  function resultsBody(){
+    var final = sortedPlayers();
+    var top = final.slice(0,3);
+    var topScore = final.length ? (final[0].totalScore||0) : 0;
+    var winners = final.filter(function(p){ return (p.totalScore||0)===topScore && topScore>0; });
+    var podium = top.map(function(p,i){
+      var cls = i===0?"gold":(i===1?"silver":"bronze");
+      var medal = i===0?"🥇":(i===1?"🥈":"🥉");
+      return '<div class="pod ' + cls + '"><div class="medal">' + medal + '</div><div class="pname">' + esc(p.name) + streakTag(p) + '</div><div class="pscore">' + (p.totalScore||0) + '</div></div>';
+    }).join("");
+    var rest = final.slice(3);
+    return '<div class="card" style="text-align:center;">' +
+        '<h2 style="margin:0 0 4px;">🏁 Final results</h2>' +
+        '<p class="lede">' + (winners.length===1 ? ('Winner: <b style="color:var(--text)">'+esc(winners[0].name)+'</b> 🎉')
+            : winners.length>1 ? ('Tied for the win: <b style="color:var(--text)">'+winners.map(function(w){return esc(w.name);}).join(", ")+'</b> 🎉')
+            : "No answers were scored.") + '</p>' +
+      '</div>' +
+      (top.length? '<div class="podium">' + podium + '</div>' : '') +
+      (rest.length? '<div class="card">' + rest.map(function(p,i){
+        return '<div class="leaderrow' + (p.id===myPid?" me":"") + '"><span class="rank">#'+(i+4)+'</span><span class="lname">'+esc(p.name)+streakTag(p)+'</span><span class="lscore">'+(p.totalScore||0)+'</span></div>';
+      }).join("") + '</div>' : '');
+  }
+
+  // ---------- host control bar ----------
+  function hostbar(screen){
+    if(!isHost || screen.indexOf("host:")!==0) return "";
+    var status = screen.slice(5);
+    var inner = "";
+    if(status==="lobby"){
+      var n = playerList().length;
+      inner = '<button class="btn" id="btnStart"' + (n===0?" disabled":"") + '>Start game (' + n + ' joined)</button>';
+    } else if(status==="question" || status==="reveal"){
+      // Pause/Resume is shown in every phase where time is passing. While
+      // paused, Reveal / Next are disabled: the host must Resume first.
+      var paused = !!state().paused;
+      var pauseBtn = paused ?
+        '<button class="btn resumebtn" id="btnResume" type="button" aria-label="Resume game">\u25b6 Resume <span class="kbd">Space</span></button>' :
+        '<button class="btn pausebtn" id="btnPause" type="button" aria-label="Pause game">\u23f8 Pause <span class="kbd">Space</span></button>';
+      var mainBtn;
+      if(status==="question"){
+        mainBtn = '<button class="btn secondary" id="btnReveal"' + (paused ? ' disabled title="Resume first"' : '') + '>Reveal answer</button>';
+      } else {
+        var isLast = ((state().qIndex)||0) >= QUESTIONS.length-1;
+        mainBtn = '<button class="btn" id="btnNext"' + (paused ? ' disabled title="Resume first"' : '') + '>' + (isLast? "Show final results":"Next question") + '</button>';
+      }
+      inner = '<div class="rowbtns">' + pauseBtn + mainBtn + '</div>';
+    } else if(status==="ended"){
+      inner = '<div class="rowbtns">' +
+        '<button class="btn secondary" id="btnRestart">Play again</button>' +
+        '<button class="btn secondary" id="btnNewRoom">New game code</button>' +
+      '</div>';
+    }
+    if(!inner) return "";
+    return '<div class="hostbar"><div class="hostbar-inner"><div class="hosttag">Host controls' + ((state() && state().paused && status!=="lobby" && status!=="ended") ? ' \u00b7 paused' : '') + '</div>' + inner + '</div></div>';
+  }
+
+  // ---------- wiring ----------
+  function wire(screen){
+    var byId = function(id){ return document.getElementById(id); };
+
+    var backHome = byId("btnBackHome");
+    if(backHome) backHome.addEventListener("click", function(){ leaveRoom(); });
+
+    var hostNew = byId("btnHostNew");
+    if(hostNew) hostNew.addEventListener("click", createRoom);
+
+    var codeForm = byId("codeForm");
+    if(codeForm) codeForm.addEventListener("submit", function(e){
+      e.preventDefault();
+      var v = byId("codeInput").value.trim().toUpperCase();
+      if(v.length < 3) return;
+      enterRoom(v, false);
+    });
+
+    var joinForm = byId("joinForm");
+    if(joinForm) joinForm.addEventListener("submit", function(e){
+      e.preventDefault();
+      var v = byId("nameInput").value.trim();
+      if(!v) return;
+      joinAsPlayer(v);
+    });
+
+    el.querySelectorAll("[data-claim]").forEach(function(b){
+      b.addEventListener("click", function(){ claimPlayer(b.getAttribute("data-claim")); });
+    });
+
+    el.querySelectorAll("[data-kick]").forEach(function(b){
+      b.addEventListener("click", function(){
+        var pid = b.getAttribute("data-kick");
+        var p = room && room.players && room.players[pid];
+        var name = p ? p.name : "this player";
+        if(confirm("Remove " + name + " from the game?")) kickPlayer(pid);
+      });
+    });
+
+    el.querySelectorAll(".ans[data-idx]").forEach(function(b){
+      b.addEventListener("click", function(){ submitAnswer(parseInt(b.getAttribute("data-idx"),10)); });
+    });
+
+    el.querySelectorAll(".hubtab").forEach(function(t){
+      t.addEventListener("click", function(){ hubTab = t.getAttribute("data-tab"); qrDrawn = null; lastScreen = null; render(); });
+    });
+
+    var timeSel = byId("settingTime");
+    if(timeSel) timeSel.addEventListener("change", updateSettings);
+    var shuffleChk = byId("settingShuffle");
+    if(shuffleChk) shuffleChk.addEventListener("change", updateSettings);
+
+    var addForm = byId("addPlayerForm");
+    if(addForm) addForm.addEventListener("submit", function(e){
+      e.preventDefault();
+      var inp = byId("addPlayerInput");
+      var v = inp.value.trim();
+      if(!v) return;
+      addManualPlayer(v);
+      inp.value = "";
+      inp.focus();
+    });
+
+    var b;
+    if((b = byId("btnStart"))) b.addEventListener("click", startGame);
+    if((b = byId("btnReveal"))) b.addEventListener("click", revealAnswer);
+    if((b = byId("btnPause"))) b.addEventListener("click", pauseGame);
+    if((b = byId("btnResume"))) b.addEventListener("click", resumeGame);
+    if((b = byId("btnNext"))) b.addEventListener("click", nextQuestion);
+    if((b = byId("btnRestart"))) b.addEventListener("click", restartGame);
+    if((b = byId("btnNewRoom"))) b.addEventListener("click", createRoom);
+
+    tick();
+  }
+
+  function drawQr(screen){
+    if(screen !== "host:lobby" || hubTab !== "invite") return;
+    var box = document.getElementById("qrbox");
+    if(!box || typeof window.QRCode === "undefined") return;
+    if(qrDrawn === roomCode) return;
+    box.innerHTML = "";
+    try{
+      new window.QRCode(box, { text: joinUrl(), width: 168, height: 168, correctLevel: window.QRCode.CorrectLevel.M });
+      qrDrawn = roomCode;
+    }catch(e){ /* QR is a nicety; the link above still works */ }
+  }
+
+  // ---------- timer ----------
+  // Host only: once everyone in the room has answered, skip the rest of the
+  // countdown and go straight to the reveal. Fires at most once per question.
+  function maybeAutoReveal(){
+    if(!isHost) return;
+    var st = state();
+    // Never while paused, and never while another host transition (pause,
+    // resume, reveal, next) is still in flight. It is simply re-checked on the
+    // next tick / realtime update, so nothing is lost.
+    if(!st || st.status !== "question" || st.paused || hostBusy) return;
+    var qi = st.qIndex||0;
+    if(autoRevealQi === qi) return;
+    var ps = playerList();
+    if(!ps.length) return;
+    var answered = ps.filter(function(p){ return p.answers && p.answers[qi]; }).length;
+    if(answered < ps.length) return;
+    if(revealAnswer()) autoRevealQi = qi;
+  }
+
+  function tick(){
+    if(tickHandle){ clearInterval(tickHandle); tickHandle = null; }
+    var st = state();
+    if(!st || st.status !== "question") return;
+    maybeAutoReveal();
+    var limit = timeLimitMs();
+    if(!st.questionStartedAt) return;
+    var done = false;
+    var step = function(){
+      var cur = state();
+      if(!cur || cur.status !== "question"){ done = true; return; }
+      maybeAutoReveal();
+      var bar = document.getElementById("timerbar");
+      var num = document.getElementById("timernum");
+      if(!bar || !num) return;
+      // While paused this is pinned at pausedAt, so the display is frozen.
+      var remaining = remainingMs(cur, limit, now());
+      var readLeft = readLeftMs(cur, now());
+      var wrap = bar.parentNode && bar.parentNode.parentNode;
+      if(wrap){
+        wrap.classList.toggle("paused", !!cur.paused);
+        wrap.classList.toggle("reading", readLeft > 0);
+      }
+      if(readLeft > 0){
+        bar.style.transform = "scaleX(" + (readLeft/READ_MS) + ")";
+        num.textContent = (cur.paused ? "⏸ " : "") + "Read " + Math.ceil(readLeft/1000) + "s";
+        wasReading = true;
+        if(cur.paused){ done = true; return; }
+        return;
+      }
+      if(wasReading){ wasReading = false; done = true; setTimeout(function(){ lastScreen = null; render(); }, 0); return; } // re-render (after this tick stops) to open the answer buttons
+      bar.style.transform = "scaleX(" + (remaining/limit) + ")";
+      num.textContent = (cur.paused ? "⏸ " : "") + Math.ceil(remaining/1000) + "s";
+      if(cur.paused){ done = true; return; } // nothing ticks until resume re-renders
+      if(remaining <= 0){
+        el.querySelectorAll(".ans[data-idx]").forEach(function(b){ b.disabled = true; });
+        var rv = document.getElementById("btnReveal");
+        if(rv) rv.classList.add("pulse");
+        done = true;
+      }
+    };
+    step();
+    if(done) return;
+    tickHandle = setInterval(function(){
+      step();
+      if(done){ clearInterval(tickHandle); tickHandle = null; }
+    }, 150);
+  }
+
+  // ---------- pause UI ----------
+  // Banner shown inside the page: on the host it explains the state and how to
+  // resume; on the join screen it tells a late joiner the game is paused.
+  function pausedBanner(who){
+    var st = state();
+    if(!st || !st.paused || (st.status !== "question" && st.status !== "reveal")) return "";
+    if(who === "host"){
+      return '<div class="pausedbanner" role="status"><div class="pb-ico" aria-hidden="true">⏸</div><div><b>Game paused</b>' +
+        '<span>The timer is frozen and every player sees a pause screen. Press Resume (or Space) to continue.</span></div></div>';
+    }
+    return '<div class="pausedbanner" role="status"><div class="pb-ico" aria-hidden="true">⏸</div><div><b>Game paused by host</b>' +
+      '<span>You can still join. Play picks up again when the host resumes.</span></div></div>';
+  }
+
+  // Full-screen "Paused by host" overlay for players. Lives on document.body
+  // (like the jump scare) because render() wipes #app on every state change.
+  // It is driven purely by room state, so a player who refreshes or joins
+  // mid-pause gets it straight away.
+  function syncPauseOverlay(screen){
+    var st = state();
+    var show = !!(st && st.paused && !isHost && (screen === "play:question" || screen === "play:reveal"));
+    var old = document.getElementById("pauseoverlay");
+    if(!show){
+      if(old && old.parentNode) old.parentNode.removeChild(old);
+      return;
+    }
+    var left = "";
+    if(st.status === "question"){
+      left = '<div class="po-left">Time left: ' + Math.ceil(remainingMs(st, timeLimitMs(), now())/1000) + 's</div>';
+    }
+    var key = st.status + "|" + (st.qIndex||0) + "|" + st.pausedAt + "|" + left;
+    if(old && old.getAttribute("data-key") === key) return;
+    if(!old){
+      old = document.createElement("div");
+      old.id = "pauseoverlay";
+      old.className = "pauseoverlay";
+      old.setAttribute("role", "alertdialog");
+      old.setAttribute("aria-modal", "true");
+      old.setAttribute("aria-label", "Paused by host");
+      document.body.appendChild(old);
+    }
+    old.setAttribute("data-key", key);
+    old.innerHTML = '<div class="po-inner"><div class="po-ico" aria-hidden="true">⏸</div>' +
+      '<div class="po-title">Paused by host</div>' +
+      '<p class="po-sub">The timer is frozen and answers are locked. It picks up right where it left off when the host resumes.</p>' + left + '</div>';
+  }
+
+  // ---------- error sound (plays with the 5-wrong jump scare) ----------
+  // Synthesised with the Web Audio API, so there is no sound file to load. Phones only allow
+  // audio after a tap, so the context is unlocked on the player's first tap (join or answer);
+  // that way a scare that fires later (e.g. when the host resumes a paused game) still has sound.
+  var audioCtx = null;
+  function getAudio(){
+    if(audioCtx) return audioCtx;
+    var AC = window.AudioContext || window.webkitAudioContext;
+    if(!AC) return null;
+    try{ audioCtx = new AC(); }catch(e){ audioCtx = null; }
+    return audioCtx;
+  }
+  var UNLOCK_EVENTS = ["pointerdown", "touchstart", "keydown"];
+  function unlockAudio(){
+    var ctx = getAudio();
+    if(!ctx) return;
+    try{
+      if(ctx.state === "suspended") ctx.resume();
+      var src = ctx.createBufferSource(); src.buffer = ctx.createBuffer(1, 1, 22050);
+      src.connect(ctx.destination); src.start(0);
+    }catch(e){}
+    UNLOCK_EVENTS.forEach(function(ev){ document.removeEventListener(ev, unlockAudio, true); });
+  }
+  UNLOCK_EVENTS.forEach(function(ev){ document.addEventListener(ev, unlockAudio, true); });
+
+  // "Wrong!" buzzer: two harsh low blasts, then a falling wah (about 1.4 s, inside the 2 s scare)
+  function errorSound(){
+    var ctx = getAudio();
+    if(!ctx) return;
+    try{
+      if(ctx.state === "suspended") ctx.resume();
+      var out = ctx.createDynamicsCompressor();
+      var lp = ctx.createBiquadFilter(); lp.type = "lowpass"; lp.frequency.value = 2200;
+      lp.connect(out); out.connect(ctx.destination);
+      var t0 = ctx.currentTime + 0.03;
+      var tone = function(type, f0, f1, start, dur, vol){
+        var o = ctx.createOscillator(), g = ctx.createGain();
+        o.type = type;
+        o.frequency.setValueAtTime(f0, start);
+        if(f1 !== f0) o.frequency.exponentialRampToValueAtTime(f1, start + dur);
+        g.gain.setValueAtTime(0.0001, start);
+        g.gain.exponentialRampToValueAtTime(vol, start + 0.015);
+        g.gain.setValueAtTime(vol, start + dur - 0.05);
+        g.gain.exponentialRampToValueAtTime(0.0001, start + dur);
+        o.connect(g); g.connect(lp);
+        o.start(start); o.stop(start + dur + 0.03);
+      };
+      [0, 0.38].forEach(function(dt){
+        tone("square", 110, 110, t0 + dt, 0.3, 0.32);
+        tone("square", 117, 117, t0 + dt, 0.3, 0.32);
+      });
+      tone("sawtooth", 330, 70, t0 + 0.8, 0.62, 0.38);
+    }catch(e){}
+    try{ if(navigator.vibrate) navigator.vibrate([220, 90, 220]); }catch(e){}
+  }
+
+  // ---------- jump scare ----------
+  // Lives on document.body, not inside #app — render() wipes #app on every
+  // state change (including realtime updates from other players).
+  function jumpScare(count){
+    var pst = state();
+    if(pst && pst.paused){ pendingScare = count; return; } // fires on resume (see render)
+    var old = document.getElementById("jumpscare");
+    if(old && old.parentNode) old.parentNode.removeChild(old);
+    if(jumpScareHandle){ clearTimeout(jumpScareHandle); jumpScareHandle = null; }
+    var box = document.createElement("div");
+    box.id = "jumpscare";
+    box.className = "jumpscare";
+    box.setAttribute("role", "alert");
+    box.innerHTML = '<div class="js-inner">' +
+      '<div class="js-face" aria-hidden="true">💀</div>' +
+      '<div class="js-text">BOO! ' + count + ' wrong!</div>' +
+    '</div>';
+    var close = function(){
+      if(jumpScareHandle){ clearTimeout(jumpScareHandle); jumpScareHandle = null; }
+      if(box.parentNode) box.parentNode.removeChild(box);
+    };
+    box.addEventListener("click", close);
+    document.body.appendChild(box);
+    errorSound();
+    jumpScareHandle = setTimeout(close, 2000);
+  }
+
+  // ---------- lock in notice ----------
+  // 3 wrong answers in a row (resets on any correct answer). Own device only.
+  function lockInNotice(){
+    var old = document.getElementById("lockin");
+    if(old && old.parentNode) old.parentNode.removeChild(old);
+    if(lockInHandle){ clearTimeout(lockInHandle); lockInHandle = null; }
+    var box = document.createElement("div");
+    box.id = "lockin";
+    box.className = "lockin";
+    box.setAttribute("role", "status");
+    box.textContent = "🔒 LOCK IN!";
+    document.body.appendChild(box);
+    lockInHandle = setTimeout(function(){
+      if(box.parentNode) box.parentNode.removeChild(box);
+      lockInHandle = null;
+    }, 1800);
+  }
+
+  // Fires once per question, only once the reveal screen for that question
+  // shows up (i.e. after everyone's answered or the host reveals) — not the
+  // moment the player themselves taps a wrong answer.
+  function maybeShowLockIn(){
+    var st = state();
+    if(!st) return;
+    if(st.status === "lobby"){ lockInShownQi = null; return; }
+    if(isHost || st.status !== "reveal" || st.paused) return; // deferred until resume
+    var qi = st.qIndex||0;
+    if(lockInShownQi === qi) return;
+    var mp = myPlayer();
+    var a = mp && mp.answers && mp.answers[qi];
+    if(a && a.lockIn){
+      lockInShownQi = qi;
+      lockInNotice();
+    }
+  }
+
+  // ---------- actions ----------
+  function genCode(){
+    var s = "";
+    for(var i=0;i<4;i++) s += CODE_ALPHABET.charAt(Math.floor(Math.random()*CODE_ALPHABET.length));
+    return s;
+  }
+
+  function genId(){
+    if(window.crypto && crypto.randomUUID) return crypto.randomUUID().replace(/-/g,"").slice(0,16);
+    return "p" + Date.now().toString(36) + Math.random().toString(36).slice(2,8);
+  }
+
+  function rpc(fn, args){
+    return sb.rpc(fn, args).then(function(res){
+      if(res.error) throw res.error;
+      return res.data;
+    });
+  }
+  function roomSet(path, value){ return rpc("room_set", { p_code: roomCode, p_path: path, p_value: value }); }
+  function roomMerge(path, patch){ return rpc("room_merge", { p_code: roomCode, p_path: path, p_patch: patch }); }
+  function roomRemove(path){ return rpc("room_remove_path", { p_code: roomCode, p_path: path }); }
+  function serverNowMs(){ return rpc("room_now_ms", {}).then(function(v){ return Number(v); }); }
+
+  function kickPlayer(pid){
+    if(!sb || !roomCode || !isHost) return;
+    roomRemove(["players", pid]);
+    if(room && room.players) delete room.players[pid]; // optimistic
+    lastScreen = null; render();
+  }
+
+  function createRoom(){
+    if(!sb) return;
+    var code = genCode();
+    rpc("room_create", { p_code: code, p_data: {
+      state: { status:"lobby", qIndex:0, questionStartedAt:null, order:null, createdAt: Date.now() },
+      settings: DEFAULT_SETTINGS,
+      players: {}
+    }}).then(function(){
+      lsSet("lsl_host_" + code, "1");
+      enterRoom(code, true);
+    }).catch(function(err){ sbError = err.message || String(err); render(); });
+  }
+
+  function enterRoom(code, asHost){
+    if(roomChannel){ sb.removeChannel(roomChannel); roomChannel = null; }
+    roomCode = code;
+    isHost = asHost || lsGet("lsl_host_" + code) === "1";
+    myPid = lsGet("lsl_pid_" + code);
+    roomLoaded = false; room = null; lastScreen = null; qrDrawn = null;
+    hubTab = "invite";
+    try{ history.replaceState(null, "", location.pathname + "?room=" + code); }catch(e){}
+    render();
+
+    sb.from("rooms").select("data").eq("code", code).maybeSingle().then(function(res){
+      if(res.error){ sbError = res.error.message || String(res.error); render(); return; }
+      roomLoaded = true;
+      room = res.data ? res.data.data : null;
+      render();
+    });
+
+    roomChannel = sb.channel("room:" + code)
+      .on("postgres_changes", { event:"*", schema:"public", table:"rooms", filter:"code=eq." + code }, function(payload){
+        roomLoaded = true;
+        room = payload.new ? payload.new.data : null;
+        render();
+      })
+      .subscribe();
+  }
+
+  function leaveRoom(){
+    if(roomChannel){ sb.removeChannel(roomChannel); roomChannel = null; }
+    roomCode = null; room = null; roomLoaded = false; isHost = false; myPid = null; lastScreen = null;
+    try{ history.replaceState(null, "", location.pathname); }catch(e){}
+    render();
+  }
+
+  function joinAsPlayer(name){
+    if(!sb || !roomCode) return;
+    var pid = genId();
+    roomMerge(["players", pid], { name: name, joinedAt: Date.now(), totalScore: 0, answers: {}, streak: 0, wrongCount: 0, coldStreak: 0 })
+      .then(function(){
+        myPid = pid;
+        lsSet("lsl_pid_" + roomCode, pid);
+        lastScreen = null;
+        render();
+      }).catch(function(err){ sbError = err.message || String(err); render(); });
+  }
+
+  function claimPlayer(pid){
+    if(!sb || !roomCode) return;
+    roomMerge(["players", pid], { claimed: true })
+      .then(function(){
+        myPid = pid;
+        lsSet("lsl_pid_" + roomCode, pid);
+        lastScreen = null;
+        render();
+      }).catch(function(err){ sbError = err.message || String(err); render(); });
+  }
+
+  function addManualPlayer(name){
+    if(!sb || !roomCode || !isHost) return;
+    var pid = genId();
+    roomMerge(["players", pid], {
+      name: name, joinedAt: Date.now(),
+      totalScore: 0, answers: {}, streak: 0, wrongCount: 0, coldStreak: 0, manual: true, claimed: false
+    });
+  }
+
+  function updateSettings(){
+    if(!sb || !roomCode || !isHost) return;
+    var timeSel = document.getElementById("settingTime");
+    var shuffleChk = document.getElementById("settingShuffle");
+    roomSet(["settings"], {
+      timeLimitSec: timeSel ? parseInt(timeSel.value,10) : settings().timeLimitSec,
+      shuffle: shuffleChk ? !!shuffleChk.checked : settings().shuffle
+    });
+  }
+
+  function submitAnswer(choiceIdx){
+    var st = state(); var mp = myPlayer();
+    if(!st || !mp || st.status !== "question") return;
+    if(st.paused) return; // answers are refused while the host has the game paused
+    var qi = st.qIndex||0;
+    if(mp.answers && mp.answers[qi]) return;
+    var limit = timeLimitMs();
+    // Paused time never counts: questionStartedAt is shifted forward on every
+    // resume, so this is time actually spent with the clock running.
+    var elapsed = elapsedMs(st, now());
+    if(elapsed < 0) return; // still in the reading window
+    if(elapsed > limit) return; // past the time limit
+    var timeMs = Math.max(0, Math.min(limit, elapsed));
+    var correct = choiceIdx === questionAt(qi).correct;
+    var prevStreak = mp.streak || 0;
+    var newStreak = correct ? prevStreak + 1 : 0;
+    var hotStreak = correct && prevStreak >= 1; // 2nd correct in a row and up
+    var newWrong = correct ? (mp.wrongCount||0) : (mp.wrongCount||0) + 1;
+    var newColdStreak = correct ? 0 : (mp.coldStreak||0) + 1; // consecutive wrong, resets on a correct answer
+    var points = correct ? Math.round(500 + 500 * (1 - timeMs/limit)) : 0;
+    if(hotStreak) points = Math.round(points * 1.2);
+
+    // 3+ wrong in a row: flag this answer so the LOCK IN notice shows once
+    // everyone's answered and the reveal screen comes up, not mid-question.
+    var lockIn = !correct && newColdStreak > 0 && newColdStreak % 3 === 0;
+
+    var answers = Object.assign({}, mp.answers || {});
+    answers[qi] = { choice: choiceIdx, correct: correct, points: points, timeMs: timeMs, hotStreak: hotStreak, lockIn: lockIn };
+    var total = 0;
+    Object.keys(answers).forEach(function(k){ total += answers[k].points || 0; });
+
+    roomMerge(["players", myPid], { answers: answers, totalScore: total, streak: newStreak, wrongCount: newWrong, coldStreak: newColdStreak });
+
+    // optimistic local lock so the tap feels instant
+    if(room && room.players && room.players[myPid]){
+      room.players[myPid].answers = answers;
+      room.players[myPid].totalScore = total;
+      room.players[myPid].streak = newStreak;
+      room.players[myPid].wrongCount = newWrong;
+      room.players[myPid].coldStreak = newColdStreak;
+    }
+    lastScreen = null; render();
+    if(!correct && newWrong > 0 && newWrong % 5 === 0) jumpScare(newWrong);
+  }
+
+  function startGame(){
+    if(!sb || !isHost) return;
+    autoRevealQi = null; // fresh game (also after Play again): allow auto-reveal on every question
+    var s = settings();
+    var order = QUESTIONS.map(function(_, i){ return i; });
+    if(s.shuffle){
+      for(var i=order.length-1;i>0;i--){
+        var j = Math.floor(Math.random()*(i+1));
+        var t = order[i]; order[i]=order[j]; order[j]=t;
+      }
+    }
+    serverNowMs().then(function(ts){
+      roomSet(["state"], { status:"question", qIndex:0, order:order, questionStartedAt: ts + READ_MS });
+    });
+  }
+
+  // Host state transitions (pause, resume, reveal, next) are serialised: while
+  // one is in flight the others are ignored. That is what stops an auto-reveal
+  // (everyone answered) and a Pause click from both firing off the same tick.
+  // Returns true if fn was started.
+  function hostAction(fn){
+    if(hostBusy) return false;
+    hostBusy = true;
+    var p;
+    try{ p = fn(); }catch(err){ hostBusy = false; throw err; }
+    Promise.resolve(p).catch(function(err){
+      if(window.console) console.warn("host action failed", err);
+    }).then(function(){ hostBusy = false; });
+    return true;
+  }
+
+  // Returns true if the reveal was sent (so the auto-reveal can mark itself done).
+  function revealAnswer(){
+    if(!sb || !isHost) return false;
+    var st = state();
+    if(!st || st.status !== "question" || st.paused) return false; // resume first
+    return hostAction(function(){ return roomMerge(["state"], { status:"reveal" }); });
+  }
+
+  function nextQuestion(){
+    if(!sb || !isHost) return false;
+    var st = state();
+    if(!st || st.status !== "reveal" || st.paused) return false; // resume first
+    var next = (st.qIndex||0) + 1;
+    return hostAction(function(){
+      if(next >= QUESTIONS.length){
+        return roomMerge(["state"], { status:"ended", paused:false, pausedAt:null });
+      }
+      return serverNowMs().then(function(ts){
+        return roomMerge(["state"], { status:"question", qIndex: next, questionStartedAt: ts + READ_MS, paused:false, pausedAt:null });
+      });
+    });
+  }
+
+  // ---------- pause / resume (host only) ----------
+  // The pause lives in the shared room state (state.paused, state.pausedAt), so
+  // every screen follows it and it survives a refresh. pausedAt and the resume
+  // timestamp both come from the server clock (room_now_ms), never the local one.
+  // Host-only is enforced here on the client via the per-browser host flag,
+  // exactly like kick / reveal / next (the RLS policies are open).
+  function pauseGame(){
+    if(!sb || !roomCode || !isHost) return false;
+    var st = state();
+    if(!st || st.paused || (st.status !== "question" && st.status !== "reveal")) return false;
+    return hostAction(function(){
+      return serverNowMs().then(function(ts){
+        var cur = state();
+        // re-check after the round trip in case something else landed meanwhile
+        if(!cur || cur.paused || (cur.status !== "question" && cur.status !== "reveal")) return;
+        var patch = pausePatch(ts);
+        return roomMerge(["state"], patch).then(function(){
+          if(room && room.state) Object.assign(room.state, patch); // optimistic; the realtime echo confirms
+          lastScreen = null; render();
+        });
+      });
+    });
+  }
+
+  function resumeGame(){
+    if(!sb || !roomCode || !isHost) return false;
+    var st = state();
+    if(!st || !st.paused) return false;
+    return hostAction(function(){
+      return serverNowMs().then(function(ts){
+        var cur = state();
+        if(!cur || !cur.paused) return;
+        var patch = resumePatch(cur, ts); // clears the pause, shifts questionStartedAt by the pause length
+        return roomMerge(["state"], patch).then(function(){
+          if(room && room.state) Object.assign(room.state, patch);
+          lastScreen = null; render();
+        });
+      });
+    });
+  }
+
+  function togglePause(){
+    var st = state();
+    if(st && st.paused) return resumeGame();
+    return pauseGame();
+  }
+
+  // Host shortcut: Space or P. Ignored while typing in a field, with modifier
+  // keys, and for Space on a focused button (that press already clicks it).
+  function onKeydown(e){
+    if(!isHost || !roomCode) return;
+    if(e.defaultPrevented || e.repeat || e.ctrlKey || e.metaKey || e.altKey) return;
+    var k = e.key;
+    var isSpace = (k === " " || k === "Spacebar");
+    if(!isSpace && k !== "p" && k !== "P") return;
+    var t = e.target, tag = (t && t.tagName) ? t.tagName.toUpperCase() : "";
+    if(tag === "INPUT" || tag === "TEXTAREA" || tag === "SELECT" || (t && t.isContentEditable)) return;
+    if(isSpace && (tag === "BUTTON" || tag === "A" || tag === "SUMMARY")) return;
+    var st = state();
+    if(!st || (st.status !== "question" && st.status !== "reveal")) return; // nothing ticking in lobby / results
+    e.preventDefault();
+    togglePause();
+  }
+
+  function restartGame(){
+    if(!sb || !isHost) return;
+    rpc("room_restart", { p_code: roomCode });
+  }
+
+  // ---------- boot ----------
+  function boot(){
+    if(!configured()){ render(); return; }
+    try{
+      sb = window.supabase.createClient(window.MQ_SUPABASE_CONFIG.url, window.MQ_SUPABASE_CONFIG.anonKey);
+    }catch(err){
+      sbError = err.message || String(err);
+      render(); return;
+    }
+
+    var t0 = Date.now();
+    rpc("room_now_ms", {}).then(function(v){
+      var t1 = Date.now();
+      serverOffset = Number(v) - (t0 + t1) / 2;
+    }).catch(function(){ /* clock sync is a nicety; timers still work without it */ });
+
+    document.addEventListener("keydown", onKeydown);
+
+    var params = new URLSearchParams(location.search);
+    var code = (params.get("room") || "").trim().toUpperCase();
+    if(code){ enterRoom(code, lsGet("lsl_host_" + code) === "1"); }
+    else { render(); }
+  }
+
+  boot();
+})();
+</script>
+</body>
+</html>
